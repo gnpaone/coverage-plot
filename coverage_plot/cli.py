@@ -47,4 +47,7 @@ def coverage_plot(plot_type, importance_type, show, save, coverage_file):
     if show:
         fig.show()
     if save:
-        fig.write_html(save)
+        if save.endswith(".png"):
+            fig.write_image(save)
+        else:
+            fig.write_html(save)
