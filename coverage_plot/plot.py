@@ -79,10 +79,7 @@ def export_df(report: Report, importance: Importance) -> pd.DataFrame:
         }
         records.append(record)
 
-    def _sorter(record_: Dict) -> str:
-        return record_["path"]
-
-    records = sorted(records, key=_sorter)
+    records = sorted(records, key=lambda record_: record_["path"])
     return pd.DataFrame(records)
 
 
@@ -95,7 +92,7 @@ def make_path_components(report_df: pd.DataFrame) -> pd.DataFrame:
         chunks = {f"p{i}": component for i, component in enumerate(path.split("/"))}
         return pd.Series(chunks)
 
-    return report_df["path"].apply(splitter)
+    return report_df["path"].apply(splitter, result_type="expand")
 
 
 @frozen
@@ -123,11 +120,11 @@ def plot_sunburst(report: Report, importance: Importance) -> Figure:
     """Return a sunburst Figure object from a report."""
     df = export_df(report, importance)
     path_components = make_path_components(df)
-    summary = pd.concat([df, path_components], axis=1)
+    summary = pd.concat([df, path_components.to_frame()], axis=1)
     return px.sunburst(
         summary,
         names="name",
-        path=path_components.columns,
+        path=path_components.columns.tolist(),
         values="importance",
         color="percent_covered",
         color_continuous_scale="RdYlGn",
@@ -139,11 +136,11 @@ def plot_treemap(report: Report, importance: Importance):
     """Return a treemap Figure object from a report."""
     df = export_df(report, importance)
     path_components = make_path_components(df)
-    summary = pd.concat([df, path_components], axis=1)
+    summary = pd.concat([df, path_components.to_frame()], axis=1)
     return px.treemap(
         summary,
         names="name",
-        path=path_components.columns,
+        path=path_components.columns.tolist(),
         values="importance",
         color="percent_covered",
         color_continuous_scale="RdYlGn",
